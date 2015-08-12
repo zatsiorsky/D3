@@ -325,7 +325,7 @@ If you ran this visualization, you would notice that there is strange behavior t
 				.delay(1000)
 				.attr("fill", "blue");
 		}
-
+More info on `transition.end()' [here.](https://github.com/mbostock/d3/wiki/Transitions#control)
 - **You can control the "feel" of transitions with `.ease()`.** By default, transitions have an ease of "cubic-in-out" (slow-fast-slow). `.ease("linear")` is sometimes used in *GraphController.js* for a constant transition. Check [this](https://github.com/mbostock/d3/wiki/Transitions#easing) out for more info on easing.
 
 Check out [this](http://plnkr.co/edit/EjvvfC8jZNlZtS9u2Qic?p=preview) cool D3 transitions firework show which demonstrates some of these things.
