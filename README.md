@@ -245,6 +245,94 @@ This added the circle corresponding to the new datum, `4`. Now `circles` contain
 
 ### Transitions
 
+In the example above, attribute changes occur instantaneously. It is simple to animate the attribute changes in D3 using *transitions*. Let's look at a simple example by modifying the code block above.
+
+	circles.enter().append("circle")
+		.attr("x", 5)
+		.attr("y", function(d, i) {
+			return 10 * i;
+		})
+		.attr("r", 0)
+	.transition()
+		.attr("r", function(d) {
+			return d;
+		});
+
+This code sets the initial radius of the circles to 0, and then transitions the radius to the final value over time. By default, the duration of a transition is 250ms. This can be changed using `.transition().duration(n)`, where `n` is the number of milliseconds you would like the transition to take. There is no delay on the transition by default, but this can also be specified using `.transition().delay(m)`, where `m` is the number of milliseconds you would like to delay. For example, to transition the color of an circle from green to red over two seconds after a delay of 500ms, you could do the following:
+
+	circles
+		.attr("fill", "green")
+	.transition().duration(2000).delay(500)
+		.attr("fill", "red);
+
+#### Chaining Transitions
+
+It is possible to chain multiple transitions on the same element. For example, we could change the color of the circles from green to red, and then back to green with the following code:
+
+	circles
+		.attr("fill", "green")
+	.transition()
+		.attr("fill", "red")
+	.transition()
+		.attr("fill", "green")
+
+Some important notes about transitions:
+
+- **New transitions on elements overwrite old ones.** If you need to call two simultaneous transitions on the same element without overwriting, you need to specify a transition name. This can be done simply with `.transition("transitionName")`. In *GraphController.js*, one instance of this occurs in the bar chart visualization. When the user hovers over one of the bars, the opacity of the fill attribute changes. When the data is sorted, the bars transition to their new positions. These are two distinct transitions that can occur simultaneously on the same element. Without specifying transition names, hovering over a bar during the position transition would cause the bar to freeze at its current location, since the position transition was stopped.
+
+- **Specify attribute defaults.** Let's say that you want to change the fill opacity of a circle when you hover over it, and then reverse the change when you mouse out. This can be done with the following code (when circles are appended to the DOM).
+
+		circles.enter().append("circle")
+			.attr("x", 20)
+			.attr("y", 20)
+			.attr("r", 5)
+			.on("mouseover", function(d) {
+				d3.select(this)
+					.transition()
+					.attr("fill-opacity", 0.5);
+			})
+			.on("mouseout", function(d) {
+				d3.select(this)
+					.transition()
+					.attr("fill-opacity", 1);
+			});
+If you ran this visualization, you would notice that there is strange behavior the first time you mouse over a circle. This is because D3 does not have a starting point for the fill-opacity attribute. To fix this, simply specify a starting attribute value after appending the `<circle>` elements.
+
+		circles.enter().append("circle")
+			.attr("fill-opacity", 1) // specify initial value
+			...
+
+- **Use the "end" event to chain transitions with delays.** In the transition chaining example above, there are no delays associated with the transitions. If any of the chained transitions require a delay, it is recommended to use the "end" event to trigger the next transition. The issue is not well-documented, but switching out of the browser window during chained transitions with delays can cause the chain to break unless you use the "end" event. Here's an example where the circles transition from red to green, delay 500ms, transition from green to red, delay 1s, and transition from red to blue:
+
+		circles.enter().append("circle")
+			... // set position and such
+			.attr("fill", "red")
+		.transition()
+			.attr("fill", "green")
+			.each("end", secondTransition);
+		
+		function secondTransition () 
+		{
+			d3.select(this)
+				.transition()
+				.delay(500)
+				.attr("fill", "red")
+				.each("end", thirdTransition);
+		}
+
+		function thirdTransition () 
+		{
+			d3.select(this)
+				.transition()
+				.delay(1000)
+				.attr("fill", "blue");
+		}
+
+## Other *GraphController.js*-specific things
+
+
+
+
 
 
 
