@@ -10,3 +10,5 @@ The process of rendering a graph in D3 goes through the same basic steps (detail
 ## Initialization
 
 D3 visualizations are created using mainly SVG elements. Generally, a visualization has a parent `<svg>` element, with a container `<g>` element that houses the visual elements. The position and dimensions of the container `<g>` element are determined by the height, width, and margin constants set at the top of the file.
+
+![](https://github.com/zatsiorsky/D3/blob/master/img-1.png)
