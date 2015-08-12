@@ -363,6 +363,27 @@ The above code adds an element to the legend for each datum value. For datum obj
 
 *GraphController.js* uses a small package called *d3.tip* to enable data hovering. The following code initializes the tooltip:
 
+	this.tip = d3.tip()
+        .attr('class', 'd3-tip')
+		// move 10px left of calculated position
+        .offset([-10, 0]) 
+		// HTML you want to display in tooltip
+		// d is the datum bound to the element you are hovering over
+        .html(function (d) 
+        {
+			return "<h1>" + d + "</h1>";
+		});
+	// call tip on the SVG element you want it to be active in
+	this.g.call(this.tip);
+
+Activating the tooltip also requires adding mouseover and mouseout events to the SVG elements of interest. The following will do:
+
+	circles.enter().append("circle")
+		... // set initial attributes
+	    .on("mouseover", this.tip.show)
+		.on("mouseout", this.tip.hide)
+		...
+
 
     
 
