@@ -21,9 +21,7 @@ To reproduce the above in code, the `<svg>` and `<g>` elements could be set up a
             .attr("height", this.height);
 
         this.g = this.svg.append("g")
-			.attr("width", this.width - this.margin.left - this.margin.right)
-			.attr("height", this.height - this.margin.top - this.margin.bottom)
-			.attr("transform", "(" + this.margin.right + "," + this.margin.top + ")");
+			.attr("transform", "(" + this.margin.left + "," + this.margin.top + ")");
 
 ### Specifics in *GraphController.js*
 
@@ -178,17 +176,17 @@ Let's append those circles to the `<svg>`:
 Now we've appended a `<circle>` element for each new data point. But, we haven't added any attributes to the new circles. Let's do that:
 
 	circlesEnter
-		.attr("x", 5)
-		.attr("y", function(d, i) {
+		.attr("cx", 5)
+		.attr("cy", function(d, i) {
 			return 10 * i;
 		})
 		.attr("r", function(d) {
 			return d;
 		});
 
-The `x` attribute of each circle determines the x-position. In each case, the circles will have an x-position of 5.
+The `cx` attribute of each circle determines the x-position. In each case, the circles will have an x-position of 5.
 
-The `y` attribute of each circle is determined dynamically. When `function(d, i)` is passed to `attr()`, you can access the datum that is bound to a particular element. `d` is the datum bound to the element, while `i` is the index of the datum in the data array. In this case, the three circles will have y-positions of 0, 10, and 20 respectively.
+The `cy` attribute of each circle is determined dynamically. When `function(d, i)` is passed to `attr()`, you can access the datum that is bound to a particular element. `d` is the datum bound to the element, while `i` is the index of the datum in the data array. In this case, the three circles will have y-positions of 0, 10, and 20 respectively.
 
 The `r` attribute determines the radius of the circle. We are only interested in the datum (not the index), which is why we pass in `function(d)` rather than `function(d, i)`.
 
@@ -226,8 +224,8 @@ That got rid of the circle corresponding to the datum `2`.
 Now let's add the new circle:
 
 	circles.enter().append("circle")
-		.attr("x", 5)
-		.attr("y", function(d, i) {
+		.attr("cx", 5)
+		.attr("cy", function(d, i) {
 			return 10 * i;
 		})
 		.attr("r", function(d) {
@@ -248,8 +246,8 @@ This added the circle corresponding to the new datum, `4`. Now `circles` contain
 In the example above, attribute changes occur instantaneously. It is simple to animate the attribute changes in D3 using *transitions*. Let's look at a simple example by modifying the code block above.
 
 	circles.enter().append("circle")
-		.attr("x", 5)
-		.attr("y", function(d, i) {
+		.attr("cx", 5)
+		.attr("cy", function(d, i) {
 			return 10 * i;
 		})
 		.attr("r", 0)
@@ -283,8 +281,8 @@ Some important notes about transitions:
 - **Specify attribute defaults.** Let's say that you want to change the fill opacity of a circle when you hover over it, and then reverse the change when you mouse out. This can be done with the following code (when circles are appended to the DOM).
 
 		circles.enter().append("circle")
-			.attr("x", 20)
-			.attr("y", 20)
+			.attr("cx", 20)
+			.attr("cy", 20)
 			.attr("r", 5)
 			.on("mouseover", function(d) {
 				d3.select(this)
@@ -328,7 +326,46 @@ If you ran this visualization, you would notice that there is strange behavior t
 				.attr("fill", "blue");
 		}
 
+- **You can control the "feel" of transitions with `.ease()`.** By default, transitions have an ease of "cubic-in-out" (slow-fast-slow). `.ease("linear")` is sometimes used in *GraphController.js* for a constant transition. Check [this](https://github.com/mbostock/d3/wiki/Transitions#easing) out for more info on easing.
+
+Check out [this](http://plnkr.co/edit/EjvvfC8jZNlZtS9u2Qic?p=preview) cool D3 transitions firework show which demonstrates some of these things.
+
 ## Other *GraphController.js*-specific things
+
+### Legend
+
+*GraphController.js* uses a small package called *d3.legend* to render a legend. The following code draws the legend:
+
+	this.legend = this.g.append("g")
+                .attr("class", "legend")
+                .style("font-size", "10px")
+                .call(d3.legend);
+
+    this.legendWidth = this.legend.node().getBBox().width;
+
+    this.legend
+        .attr("translate(" + (that.width - that.legendWidth) + ",0)")
+
+The `this.legendWidth` code gets the width of the legend `<g>` element. With it, we can calculate the precise position so that the legend fits nicely into the top-right of the view.
+
+Besides drawing the legend, it is important to specify which data should be used for it. This is done in the *Update* phase. Let's assume we want to add a legend for our `<circle>` elements from before. Then it would be as simple as:
+
+	circles.enter().append("circle")
+	... // set initial attributes
+    .attr("data-legend", function(d) {
+		return d;
+	})
+	...
+
+The above code adds an element to the legend for each datum value. For datum objects that have multiple properties, you can pass a particular field (like `d.name`) to the data-legend attribute. Currently, in *GraphController.js*, the legend only renders on the first load of the graph. To support legend updating, some additional work would need to be done.
+
+### Tooltip
+
+*GraphController.js* uses a small package called *d3.tip* to enable data hovering. The following code initializes the tooltip:
+
+
+    
+
 
 
 
