@@ -23,6 +23,42 @@ To reproduce the above in code, the `<svg>` and `<g>` elements could be set up a
         this.g = this.svg.append("g")
 			.attr("transform", "(" + this.margin.left + "," + this.margin.top + ")");
 
+### Scales
+
+It is common to initialize scales in the initialization phase. Scales in D3 are functions that take an input and map it onto a range. When initializing scales, you really only know what the range will be, since we don't have the data yet to determine the domain. In most cases, when we know that the height and width will be constant, we can set up the axes right away. Let's do an example here:
+
+	this.x = d3.scale.linear()
+				.range([0, this.width]);
+
+	this.y = d3.scale.linear()
+				.range([this.height, 0]);
+
+Imagine creating a scatterplot with the scales above. We would want the plot to cover the entirety of the `<g>` element, so we set the range of the x scale to cover the width of `this.g`, and the range of the y scale to cover the height of `this.g`. A natural question: Why is the range of `this.y` inputted as `[this.height, 0]` rather than `[0, this.height]`? In SVG, the y-position is defined as the distance from the top of the container element. This is somewhat counter-intuitive, as an element with a y-position of 20 is rendered above an element with a y-position of 100. By inputting the range in reverse, smaller values will be mapped to larger y-positions, which corresponds to elements lower-down on the canvas.
+
+### Axes
+
+Axes use scales, which are just functions, to render visual elements. They can be set up in the initialization phase.
+
+    this.xAxis = d3.svg.axis()
+		.scale(this.x)
+        .orient("bottom");
+	this.yAxis = d3.svg.axis()
+		.scale(this.y)
+		.orient("left");
+
+The orientation simply determines how the axis will look. For example, an axis with `.orient("bottom")` will have its axis labels underneath the horizontal axis line. But, an axis with `.orient("left")` will have its axis labels to the left of the vertical axis line.
+
+In addition, we can append the `<g>` elements that we will stick the axes into. We will have one `<g>` for each axis.
+
+	this.g.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + this.height + ")");
+
+    this.g.append("g")
+        .attr("class", "y axis");
+
+As you can see above, we only need to translate the x axis. Without the translate, the x axis would be stuck at the top of the visualization (since a y position of zero is actually at the top of the container: counter-intuitive, I know). In order to get the x axis to the bottom of the visualization where we want it, we need to translate it downward by the height of the container `<g>`.
+
 ### Specifics in *GraphController.js*
 
 The following are completed in the initialization function in *GraphController.js*:
@@ -241,6 +277,31 @@ This added the circle corresponding to the new datum, `4`. Now `circles` contain
 2. *enter* - new elements. The selection is made using something like `circles.enter()`
 3. *exit* - elements to be removed. The selection is made using `circles.exit()`
 
+### Scales
+
+Remember when we set up our scales in the initiation phase? Now that we have data, we can define the domain for the scales. Linear scales generally take a `[min, max]` array as their domain.
+
+	var minX = ... 
+	var maxX = ...
+	this.x.domain([minX, maxX]);
+
+	var minY = ... // this is often 0
+	var maxY = ...
+	this.y.domain([minY, maxY]);
+
+### Axes
+
+Now that the scales are ready to go, we can call the axes on the `<g>` `.axis` elements we appended to the DOM earlier.
+
+	this.g.select(".y.axis")
+        .transition() // this adds a cool transition, not required
+        .call(this.yAxis);
+
+	this.g.select(".x.axis")
+	        .transition()
+	        .call(this.xAxis);
+
+
 ### Transitions
 
 In the example above, attribute changes occur instantaneously. It is simple to animate the attribute changes in D3 using *transitions*. Let's look at a simple example by modifying the code block above.
@@ -325,7 +386,7 @@ If you ran this visualization, you would notice that there is strange behavior t
 				.delay(1000)
 				.attr("fill", "blue");
 		}
-More info on `transition.end()' [here.](https://github.com/mbostock/d3/wiki/Transitions#control)
+More info on `transition.end()` [here.](https://github.com/mbostock/d3/wiki/Transitions#control)
 - **You can control the "feel" of transitions with `.ease()`.** By default, transitions have an ease of "cubic-in-out" (slow-fast-slow). `.ease("linear")` is sometimes used in *GraphController.js* for a constant transition. Check [this](https://github.com/mbostock/d3/wiki/Transitions#easing) out for more info on easing.
 
 Check out [this](http://plnkr.co/edit/EjvvfC8jZNlZtS9u2Qic?p=preview) cool D3 transitions firework show which demonstrates some of these things.
@@ -383,6 +444,18 @@ Activating the tooltip also requires adding mouseover and mouseout events to the
 	    .on("mouseover", this.tip.show)
 		.on("mouseout", this.tip.hide)
 		...
+
+### Colors
+
+The color scheme of the graphs is determined by the range of the `this.factorColor` scale in *GraphController.js*. D3 has preset color scales, including `d3.scale.category10()`, which includes a preset range of colors. To use the preset scales, you can simply do (for example):
+
+	this.factorColor = d3.scale.category();
+
+If you want to define your own colors for the graph, you can create a new ordinal scale and set the range yourself. For example:
+
+	this.factorColor = d3.scale.ordinal().range(["red", "white", "blue"]);
+
+This will set the graph to use only red, white, and blue in its color scheme. 
 
 
     
